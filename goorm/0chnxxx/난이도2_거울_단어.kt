@@ -13,8 +13,27 @@
  * 단어가 거울 단어이면 Mirror 출력 아니면 Normal 출력
  */
 
-val alphabets = arrayOf('b', 'd', 'i', 'l', 'm', 'n', 'o', 'p', 'q', 's', 'z', 'u', 'v', 'w', 'x')
-val notMirrorAlphabets = arrayOf('b', 'd', 'p', 'q', 's', 'z')
+val pairs = arrayOf(
+    'b' to 'd',
+    'i' to 'i',
+    'l' to 'l',
+    'm' to 'm',
+    'n' to 'n',
+    'o' to 'o',
+    'p' to 'q',
+    's' to 'z',
+    'u' to 'u',
+    'v' to 'v',
+    'w' to 'w',
+    'x' to 'x'
+)
+
+val mirrorAlphabets = pairs
+    .filter { it.first == it.second }
+    .map { arrayOf(it.first, it.second) }
+    .flatMap { it.asSequence() }
+    .distinct()
+    .toList()
 
 fun main(args: Array<String>) {
     val count = readLine()!!.toInt()
@@ -31,24 +50,38 @@ fun main(args: Array<String>) {
 }
 
 private fun isMirror(word: String): Boolean {
-    for (i in 0 until word.length) {
-        val char = word[i]
+    val length = word.length
 
-        // 1글자 단어일 경우 거울 단어인지
-        if (word.length == 1 && notMirrorAlphabets.contains(char)) {
+    // 1글자 단어일 경우 거울 단어인지
+    if (length == 1 && !mirrorAlphabets.contains(word.first())) {
+        return false
+    }
+
+    // 홀수 글자 단어일 경우 가운데 단어가 거울 단어인지
+    if (length % 2 == 1 && (!mirrorAlphabets.contains(word[((1 + word.length) / 2) - 1]) || findPair(word[((1 + word.length) / 2) - 1]) == null)) {
+        return false
+    }
+
+    for (i in 0 until length / 2) {
+        val frontChar = word[i]
+        val backChar = word[length - i - 1]
+
+        val pair = findPair(frontChar)
+
+        // 거울 단어인지
+        if (pair == null) {
             return false
         }
 
-        // 홀수 글자 단어일 경우 가운데 단어가 거울 단어인지
-        if (word.length % 2 == 1 && i == ((1 + word.length) / 2) - 1 && notMirrorAlphabets.contains(char)) {
-            return false
-        }
-
-        // 거울 단어를 포함하고 있는지
-        if (!alphabets.contains(char)) {
+        // 해당 쌍이 맞는지
+        if (pair.first != backChar && pair.second != backChar) {
             return false
         }
     }
 
     return true
+}
+
+private fun findPair(char: Char): Pair<Char, Char>? {
+    return pairs.find { it.first == char || it.second == char }
 }
