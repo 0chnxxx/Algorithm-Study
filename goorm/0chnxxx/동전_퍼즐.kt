@@ -1,3 +1,5 @@
+import kotlin.math.min
+
 /**
  * 무한 격자 평면 위에 몇몇 격자점에 동전이 놓여져 있다.
  * 퍼즐의 목표는 최소 개수의 동전을 옮겨서 새로운 모양을 만드는 것이다.
@@ -16,57 +18,45 @@
  * 두 배치의 동전 개수는 동일하다.
  */
 
-data class State(
-    val coins: List<Pair<Int, Int>>,
-    val moves: Int
-)
-
 fun main(args: Array<String>) {
     val (h1, w1) = readLine()!!.split(" ").map { it.toInt() }
-    val before = Array(h1) { CharArray(w1) }
-
-    for (i in 0 until h1) {
-        val coins = readLine()!!.toCharArray()
-
-        for (j in 0 until w1) {
-            before[i][j] = coins[j]
-        }
-    }
+    val beforeCoins = setCoins(h1, w1)
 
     val (h2, w2) = readLine()!!.split(" ").map { it.toInt() }
-    val after = Array(h2 * 3) { CharArray(w2 * 3) }
+    val afterCoins = setCoins(h2, w2)
 
-    var sol = 0
+    val result = calculateMinCoinsToMove(beforeCoins, afterCoins)
 
-    for (i in 0 until h2) {
+    println(result)
+}
+
+fun setCoins(h: Int, w: Int): List<Pair<Int, Int>> {
+    val positions = mutableListOf<Pair<Int, Int>>()
+
+    for (i in 0 until h) {
         val coins = readLine()!!.toCharArray()
 
-        for (j in 0 until w2) {
-            after[i + h2][j + w2] = coins[j]
-
-            if (after[i + h2][j + w2] == 'O') {
-                sol++
+        for (j in 0 until w) {
+            if (coins[j] == 'O') {
+                positions.add(Pair(i, j))
             }
         }
     }
 
-    var answer = 0
+    return positions
+}
 
-    for (i in 0 .. h2 * 2) {
-        for (j in 0 .. w2 * 2) {
-            var count = 0
+fun calculateMinCoinsToMove(before: List<Pair<Int, Int>>, after: List<Pair<Int, Int>>): Int {
+    var minMoves = before.size
 
-            for (k in 0 until h1) {
-                for (l in 0 until w1) {
-                    if (k + i < after.size && l + j < after[0].size && before[k][l] == after[k + i][l + j] && before[k][l] == 'O') {
-                        count++
-                    }
-                }
-            }
+    for (i in -10..10) {
+        for (j in -10..10) {
+            val movedBefore = before.map { (x, y) -> Pair(x + i, y + j) }
+            val neededMoves = (movedBefore.toSet() - after.toSet()).size
 
-            answer = maxOf(answer, count)
+            minMoves = min(minMoves, neededMoves)
         }
     }
 
-    println(sol - answer)
+    return minMoves
 }
